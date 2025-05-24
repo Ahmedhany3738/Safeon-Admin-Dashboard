@@ -1,3 +1,4 @@
+// src/components/ReportDetail.jsx
 import React, { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -25,18 +26,18 @@ const ReportDetail = ({ reportData, onBack }) => {
   }, [reportData]);
 
   if (!report) {
-    return <div>Loading report details...</div>;
+    return <div className="loading-message">Loading report details...</div>;
   }
 
   return (
-    <div style={{ padding: "20px" }}>
-      <button onClick={onBack} style={{ marginBottom: "20px" }}>
+    <div className="report-detail">
+      <button onClick={onBack} className="back-btn">
         &larr; Back to Community Reports
       </button>
-      <h2>Report Details</h2>
-      
+      <h2 className="report-title">Report Details</h2>
+
       {/* User and Report Information */}
-      <div style={{ border: "1px solid #ccc", padding: "20px", marginBottom: "20px" }}>
+      <div className="report-section report-info">
         <h3>User Details</h3>
         <p>
           <strong>Username:</strong> {report.username}
@@ -68,18 +69,20 @@ const ReportDetail = ({ reportData, onBack }) => {
           <strong>Description:</strong> {report.description}
         </p>
       </div>
-      
+
       {/* Map Section */}
-      <div style={{ border: "1px solid #ccc", padding: "20px", marginBottom: "20px" }}>
+      <div className="report-section report-map">
         <h3>Location Map</h3>
         {report.coordinates ? (
           <MapContainer
             center={[report.coordinates.lat, report.coordinates.lng]}
             zoom={13}
-            style={{ height: "300px", width: "100%" }}
+            className="map-container"
           >
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">
+                OpenStreetMap
+              </a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <Marker position={[report.coordinates.lat, report.coordinates.lng]}>
@@ -90,9 +93,9 @@ const ReportDetail = ({ reportData, onBack }) => {
           <p>Location coordinates not available.</p>
         )}
       </div>
-      
+
       {/* Media Section */}
-      <div style={{ border: "1px solid #ccc", padding: "20px" }}>
+      <div className="report-section report-media">
         <h3>Media</h3>
         {report.mediaType === "video" ? (
           <video width="600" controls>

@@ -14,11 +14,11 @@ const mainMenu = [
   { key: "dashboard", label: "Dashboard", icon: <FaTachometerAlt /> },
   { key: "sos", label: "SOS Alerts", icon: <FaBell /> },
   { key: "community", label: "Community Reports", icon: <FaComments /> },
+  { key: "posts", label: "Community Posts", icon: <FaComments /> },
   { key: "zoney", label: "Zoney", icon: <FaMapMarkedAlt /> },
   { key: "users", label: "Users", icon: <FaUserCog /> },
   { key: "notifications", label: "Notifications", icon: <FaRegBell /> }
 ];
-
 
 const Sidebar = ({ activeSection, setActiveSection, onLogout }) => {
   return (

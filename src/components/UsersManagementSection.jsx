@@ -1,7 +1,7 @@
-// src/components/UserManagementSection.jsx
-import React, { useState } from "react";
+// src/components/UsersManagementSection.jsx
+import React, { useState, useEffect } from "react";
 
-// Enhanced dummy user data with a profileImage property.
+// Dummy data for demonstration with two users having swapped trusted contacts.
 const dummyUsers = [
   {
     id: "user123",
@@ -10,20 +10,28 @@ const dummyUsers = [
     phone: "+20123456789",
     email: "john@example.com",
     status: "gold",
-    profileImage: "https://i.pravatar.cc/150?img=3", // dummy user image
-    trustedMembers: [
-      { name: "Alice", relationship: "Friend" },
-      { name: "Bob", relationship: "Family" }
-    ],
+    profileImage: "https://i.pravatar.cc/150?img=3",
+    // JohnDoe’s trusted contact is JaneSmith.
+    trustedMembers: [{ name: "JaneSmith", relationship: "Trusted Contact" }],
     sosAlerts: [
-      "SOS Alert on 2025-05-17 10:00 AM: Emergency in North Cairo",
-      "SOS Alert on 2025-05-18 12:30 PM: Fire alert"
+      {
+        id: "alert1",
+        userId: "user123",
+        text: "SOS Alert on 2025-05-17 10:00 AM: Emergency in North Cairo",
+        pickedUp: false
+      },
+      {
+        id: "alert2",
+        userId: "user123",
+        text: "SOS Alert on 2025-05-18 12:30 PM: Fire alert",
+        pickedUp: true
+      }
     ],
     reportingIssues: [
-      "Reporting Issue on 2025-05-16: Suspicious behavior reported"
+      { id: "issue1", text: "Reporting Issue on 2025-05-16: Suspicious behavior reported" }
     ],
     communityPosts: [
-      "Community Post on 2025-05-15: Neighborhood watch update"
+      { id: "post1", text: "Community Post on 2025-05-15: Neighborhood watch update" }
     ]
   },
   {
@@ -33,231 +41,253 @@ const dummyUsers = [
     phone: "+20198765432",
     email: "jane@example.com",
     status: "premium",
-    profileImage: "https://i.pravatar.cc/150?img=5", // another dummy image
-    trustedMembers: [{ name: "Cathy", relationship: "Colleague" }],
+    profileImage: "https://i.pravatar.cc/150?img=5",
+    // JaneSmith’s trusted contact is JohnDoe.
+    trustedMembers: [{ name: "JohnDoe", relationship: "Trusted Contact" }],
     sosAlerts: [
-      "SOS Alert on 2025-05-10 08:30 AM: Medical emergency"
+      {
+        id: "alert3",
+        userId: "user456",
+        text: "SOS Alert on 2025-05-10 08:30 AM: Medical emergency",
+        pickedUp: false
+      }
     ],
     reportingIssues: [
-      "Reporting Issue on 2025-05-01: Traffic incident reported"
+      { id: "issue2", text: "Reporting Issue on 2025-05-01: Traffic incident reported" }
     ],
     communityPosts: [
-      "Community Post on 2025-05-02: Local community event announcement"
+      { id: "post2", text: "Community Post on 2025-05-02: Local community event announcement" }
     ]
   }
 ];
 
-const UserManagementSection = () => {
+const UsersManagementSection = ({
+  searchQuery,
+  selectedUserId, // New prop to load a specific user's details automatically.
+  onViewProfile, // Callback that handles switching to a trusted member profile.
+  onSelectAlert,
+  onSelectReportingIssue,
+  onSelectCommunityPost
+}) => {
   const [searchId, setSearchId] = useState("");
   const [userData, setUserData] = useState(null);
   const [actionMessage, setActionMessage] = useState("");
+  // Store the original user details for later "Back" navigation.
+  const [originalUser, setOriginalUser] = useState(null);
 
-  // Search for a user with the given user ID from dummy data
+  // If a selectedUserId prop is provided, load that user automatically.
+  useEffect(() => {
+    if (selectedUserId) {
+      const foundUser = dummyUsers.find(
+        (user) => user.id.toLowerCase() === selectedUserId.toLowerCase()
+      );
+      if (foundUser) {
+        setUserData(foundUser);
+        setOriginalUser(foundUser);
+      }
+    }
+  }, [selectedUserId]);
+
+  // Search for a user manually via input.
   const handleSearch = () => {
     const foundUser = dummyUsers.find(
       (user) => user.id.toLowerCase() === searchId.trim().toLowerCase()
     );
     if (foundUser) {
       setUserData(foundUser);
+      setOriginalUser(foundUser);
       setActionMessage("");
     } else {
       setUserData(null);
       setActionMessage("User not found.");
+      setOriginalUser(null);
     }
   };
 
-  // Dummy admin actions simulate API calls.
-  const handleBanUser = () => {
-    setActionMessage("User has been banned.");
+  // Dummy admin action handlers.
+  const handleBanUser = () => setActionMessage("User has been banned.");
+  const handleDeactivateUser = () => setActionMessage("User account has been deactivated.");
+  const handleSendMessage = () => setActionMessage("Message sent to the user.");
+
+  // When clicking a trusted member card, look up that user from dummyUsers.
+  const handleTrustedMemberClick = (member) => {
+    if (!originalUser) setOriginalUser(userData);
+    const foundUser = dummyUsers.find(
+      (user) => user.username.toLowerCase() === member.name.toLowerCase()
+    );
+    if (foundUser) {
+      setUserData(foundUser);
+    } else {
+      setUserData({
+        id: member.id || "N/A",
+        username: member.name,
+        latestLocation: "Not Available",
+        phone: "Not Available",
+        email: "Not Available",
+        status: "Not Available",
+        profileImage: "https://via.placeholder.com/150",
+        trustedMembers: [],
+        sosAlerts: [],
+        reportingIssues: [],
+        communityPosts: []
+      });
+    }
   };
 
-  const handleDeactivateUser = () => {
-    setActionMessage("User account has been deactivated.");
-  };
-
-  const handleSendMessage = () => {
-    setActionMessage("Message sent to the user.");
+  // Allow going back to the original user's details.
+  const handleBackToOriginal = () => {
+    if (originalUser) {
+      setUserData(originalUser);
+      setOriginalUser(null);
+    }
   };
 
   return (
-    <div
-      className="user-management-section card"
-      style={{
-        padding: "20px",
-        maxWidth: "800px",
-        margin: "30px auto",
-        borderRadius: "8px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-        backgroundColor: "#fff"
-      }}
-    >
-      <h2 style={{ textAlign: "center", marginBottom: "20px" }}>User Management</h2>
-
-      {/* Search Bar */}
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
+    <div className="users-management">
+      <div className="search-bar">
         <input
           type="text"
           placeholder="Enter user ID..."
           value={searchId}
           onChange={(e) => setSearchId(e.target.value)}
-          style={{
-            padding: "10px",
-            width: "60%",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            marginRight: "10px"
-          }}
+          className="search-input"
         />
-        <button
-          onClick={handleSearch}
-          style={{
-            padding: "10px 15px",
-            backgroundColor: "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer"
-          }}
-        >
+        <button onClick={handleSearch} className="search-btn">
           Search
         </button>
       </div>
 
-      {userData && (
-        <div
-          className="user-details"
-          style={{
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            padding: "20px",
-            backgroundColor: "#f9f9f9"
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", marginBottom: "20px" }}>
+      {userData ? (
+        <div className="user-details">
+          <div className="user-header">
             <img
               src={userData.profileImage}
               alt={`${userData.username} avatar`}
-              style={{
-                borderRadius: "50%",
-                width: "150px",
-                height: "150px",
-                objectFit: "cover",
-                marginRight: "20px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
-              }}
+              className="user-avatar"
             />
-            <div>
-              <h3 style={{ margin: "0" }}>{userData.username}</h3>
-              <p style={{ margin: "5px 0", color: "#555" }}>
+            <div className="user-info">
+              <h3>{userData.username}</h3>
+              <p>
                 <strong>User ID:</strong> {userData.id}
               </p>
-              <p style={{ margin: "5px 0", color: "#555" }}>
-                <strong>Status:</strong> {userData.status.charAt(0).toUpperCase() + userData.status.slice(1)}
+              <p>
+                <strong>Status:</strong>{" "}
+                {userData.status.charAt(0).toUpperCase() + userData.status.slice(1)}
               </p>
             </div>
           </div>
 
-          <div style={{ marginBottom: "20px" }}>
-            <p><strong>Latest Location:</strong> {userData.latestLocation}</p>
-            <p><strong>Phone:</strong> {userData.phone}</p>
-            <p><strong>Email:</strong> {userData.email}</p>
+          <div className="user-contact">
+            <p>
+              <strong>Latest Location:</strong> {userData.latestLocation}
+            </p>
+            <p>
+              <strong>Phone:</strong> {userData.phone}
+            </p>
+            <p>
+              <strong>Email:</strong> {userData.email}
+            </p>
           </div>
 
-          <div style={{ marginBottom: "20px" }}>
-            <h4 style={{ marginBottom: "10px" }}>Trusted Members</h4>
-            <ul style={{ listStyle: "none", paddingLeft: "0" }}>
+          {originalUser && (
+            <button onClick={handleBackToOriginal} className="back-btn">
+              Back
+            </button>
+          )}
+
+          <div className="trusted-members">
+            <h4>Trusted Members</h4>
+            <div className="trusted-members-grid">
               {userData.trustedMembers.map((member, index) => (
-                <li key={index} style={{ marginBottom: "5px" }}>
-                  {member.name} - <em>{member.relationship}</em>
+                <div
+                  key={index}
+                  className="trusted-member-card"
+                  onClick={() => handleTrustedMemberClick(member)}
+                >
+                  <img
+                    src="https://via.placeholder.com/80"
+                    alt={member.name}
+                    className="trusted-member-avatar"
+                  />
+                  <h4>{member.name}</h4>
+                  <p>{member.relationship}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="sos-alerts">
+            <h4>SOS Alerts History</h4>
+            <ul>
+              {userData.sosAlerts.map((alert, idx) => (
+                <li
+                  key={idx}
+                  className="clickable-item"
+                  onClick={() => onSelectAlert && onSelectAlert(alert)}
+                >
+                  {alert.text}
                 </li>
               ))}
             </ul>
           </div>
 
-          <div style={{ marginBottom: "20px" }}>
-            <h4>SOS Alerts History</h4>
-            <ul style={{ listStyleType: "disc", paddingLeft: "20px" }}>
-              {userData.sosAlerts.map((alert, index) => (
-                <li key={index}>{alert}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div style={{ marginBottom: "20px" }}>
+          <div className="reporting-issues">
             <h4>Reporting Issues History</h4>
-            <ul style={{ listStyleType: "disc", paddingLeft: "20px" }}>
-              {userData.reportingIssues.map((issue, index) => (
-                <li key={index}>{issue}</li>
+            <ul>
+              {userData.reportingIssues.map((issue, idx) => (
+                <li
+                  key={idx}
+                  className="clickable-item"
+                  onClick={() =>
+                    onSelectReportingIssue && onSelectReportingIssue(issue)
+                  }
+                >
+                  {issue.text}
+                </li>
               ))}
             </ul>
           </div>
 
-          <div style={{ marginBottom: "20px" }}>
+          <div className="community-posts">
             <h4>Community Posts History</h4>
-            <ul style={{ listStyleType: "disc", paddingLeft: "20px" }}>
-              {userData.communityPosts.map((post, index) => (
-                <li key={index}>{post}</li>
+            <ul>
+              {userData.communityPosts.map((post, idx) => (
+                <li
+                  key={idx}
+                  className="clickable-item"
+                  onClick={() =>
+                    onSelectCommunityPost && onSelectCommunityPost(post)
+                  }
+                >
+                  {post.text}
+                </li>
               ))}
             </ul>
           </div>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-            <button
-              onClick={handleBanUser}
-              style={{
-                padding: "10px 15px",
-                backgroundColor: "red",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer"
-              }}
-            >
+          <div className="admin-actions">
+            <button onClick={handleBanUser} className="action-btn ban-btn">
               Ban User
             </button>
-            <button
-              onClick={handleDeactivateUser}
-              style={{
-                padding: "10px 15px",
-                backgroundColor: "orange",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer"
-              }}
-            >
+            <button onClick={handleDeactivateUser} className="action-btn deactivate-btn">
               Deactivate Account
             </button>
-            <button
-              onClick={handleSendMessage}
-              style={{
-                padding: "10px 15px",
-                backgroundColor: "green",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer"
-              }}
-            >
+            <button onClick={handleSendMessage} className="action-btn message-btn">
               Send Message
             </button>
           </div>
 
           {actionMessage && (
-            <div style={{ marginTop: "20px", color: "green", fontWeight: "bold" }}>
-              {actionMessage}
-            </div>
+            <div className="action-message">{actionMessage}</div>
           )}
         </div>
-      )}
-
-      {!userData && actionMessage && (
-        <div style={{ color: "red", textAlign: "center", marginTop: "20px" }}>
-          {actionMessage}
-        </div>
+      ) : (
+        actionMessage && (
+          <div className="error-message">{actionMessage}</div>
+        )
       )}
     </div>
   );
 };
 
-export default UserManagementSection;
+export default UsersManagementSection;
