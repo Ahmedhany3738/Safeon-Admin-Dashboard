@@ -948,13 +948,6 @@ body {
   border-radius: 4px;
   cursor: pointer;
 }
-
-/* Dynamic Layout Classes (Optional for further customization) */
-.admin-layout {}
-.sos-layout {}
-.community-layout {}
-.users-layout {}
-
 .dashboard-header {
   display: flex;
   align-items: center;
@@ -1007,4 +1000,377 @@ body {
   border-radius: 50%;
   object-fit: cover;
   cursor: pointer;
+}
+
+.reports-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.pending-reports,
+.approved-reports {
+  flex: 1;
+  background: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(192, 57, 43, 0.2);
+}
+
+.report-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+}
+
+.report-item:hover {
+  background-color: #f8f9fa;
+}
+
+.report-details {
+  margin-top: 20px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(192, 57, 43, 0.2);
+}
+
+.view-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.view-buttons button {
+  padding: 10px;
+  background-color: #bdc3c7;
+  border: none;
+  color: white;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.view-buttons button.active,
+.view-buttons button:hover {
+  background-color: #c0392b;
+}
+
+.reports-list {
+  margin-top: 10px;
+}
+
+.report-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+}
+
+.report-item:hover {
+  background-color: #f8f9fa;
+}
+
+.report-details {
+  margin-top: 20px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(192, 57, 43, 0.2);
+}
+.nav-list {
+  list-style: none;
+  padding: 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  margin: 5px 0;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+  font-size: 1.1rem;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  background-color: #a93226;
+}
+
+.nav-icon {
+  margin-right: 10px;
+  font-size: 1.3rem;
+}
+
+.chevron {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.sub-nav-list {
+  list-style: none;
+  padding-left: 25px;
+  margin: 5px 0;
+}
+
+.sub-nav-item {
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+  margin: 3px 0;
+}
+
+.sub-nav-item:hover,
+.sub-nav-item.active {
+  background-color: #a93226;
+}
+
+.sidebar-footer {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+}
+
+.logout-button {
+  width: 100%;
+  padding: 10px;
+  background-color: #a93226;
+  border: none;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.logout-button:hover {
+  background-color: #8e2d23;
+}
+/* Sidebar container */
+.sidebar {
+  width: 250px;
+  background-color: #c0392b;  /* Red theme */
+  color: #fff;
+  padding: 20px;
+  position: relative;
+}
+
+/* Sidebar header */
+.sidebar-header {
+  font-size: 1.8rem;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Navigation list */
+.nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Main navigation items */
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  margin: 5px 0;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+  font-size: 1.1rem;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  background-color: #a93226;
+}
+
+.nav-icon {
+  margin-right: 10px;
+  font-size: 1.3rem;
+}
+
+/* Sidebar footer */
+.sidebar-footer {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+}
+
+/* Logout button styles */
+.logout-button {
+  width: 100%;
+  padding: 10px;
+  background-color: #a93226;
+  border: none;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.logout-button:hover {
+  background-color: #8e2d23;
+}
+
+/* Users Management Section */
+.users-management-section {
+  margin-top: 20px;
+}
+
+.users-management-section h2 {
+  margin-bottom: 20px;
+  color: #c0392b;
+  font-size: 1.8rem;
+}
+
+/* Table Container and Styling */
+.table-wrapper {
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table thead {
+  background-color: #c0392b;
+  color: #fff;
+}
+
+.users-table th, 
+.users-table td {
+  text-align: left;
+  padding: 12px 15px;
+}
+
+.users-table tbody tr {
+  transition: background-color 0.3s;
+}
+
+.users-table tbody tr:nth-child(even) {
+  background-color: #f3f3f3;
+}
+
+.users-table tbody tr:hover {
+  background-color: #e0e0e0;
+}
+
+/* Status Badge Styling */
+.user-status {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+/* Use lowercase class names for status: subscribed, premium, regular */
+.user-status.subscribed {
+  background-color: #27ae60;
+  color: #fff;
+}
+
+.user-status.premium {
+  background-color: #f39c12;
+  color: #fff;
+}
+
+.user-status.regular {
+  background-color: #3498db;
+  color: #fff;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #c0392b;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(192, 57, 43, 0.2);
+  margin-top: 20px;
+}
+
+/* src/style.css */
+.notifications-page {
+  max-width: 700px;
+  margin: 30px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+}
+
+.notifications-page h2 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.notification-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notification-card {
+  border: 1px solid #e0e0e0;
+  background: #f9f9f9;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 15px;
+  transition: transform 0.1s ease-in-out;
+}
+
+.notification-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.notification-title {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #222;
+}
+
+.notification-time {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.notification-message {
+  font-size: 1rem;
+  color: #444;
+  line-height: 1.4;
+}
+
+.no-notifications {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #666;
 }
