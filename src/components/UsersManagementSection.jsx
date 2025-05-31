@@ -1,149 +1,111 @@
-// src/components/UsersManagementSection.jsx
 import React, { useState, useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
-// Dummy data for demonstration with two users having swapped trusted contacts.
-const dummyUsers = [
-  {
-    id: "user123",
-    username: "JohnDoe",
-    latestLocation: "Cairo, Egypt",
-    phone: "+20123456789",
-    email: "john@example.com",
-    status: "gold",
-    profileImage: "https://i.pravatar.cc/150?img=3",
-    // JohnDoe’s trusted contact is JaneSmith.
-    trustedMembers: [{ name: "JaneSmith", relationship: "Trusted Contact" }],
-    sosAlerts: [
-      {
-        id: "alert1",
-        userId: "user123",
-        text: "SOS Alert on 2025-05-17 10:00 AM: Emergency in North Cairo",
-        pickedUp: false
-      },
-      {
-        id: "alert2",
-        userId: "user123",
-        text: "SOS Alert on 2025-05-18 12:30 PM: Fire alert",
-        pickedUp: true
-      }
-    ],
-    reportingIssues: [
-      { id: "issue1", text: "Reporting Issue on 2025-05-16: Suspicious behavior reported" }
-    ],
-    communityPosts: [
-      { id: "post1", text: "Community Post on 2025-05-15: Neighborhood watch update" }
-    ]
-  },
-  {
-    id: "user456",
-    username: "JaneSmith",
-    latestLocation: "Alexandria, Egypt",
-    phone: "+20198765432",
-    email: "jane@example.com",
-    status: "premium",
-    profileImage: "https://i.pravatar.cc/150?img=5",
-    // JaneSmith’s trusted contact is JohnDoe.
-    trustedMembers: [{ name: "JohnDoe", relationship: "Trusted Contact" }],
-    sosAlerts: [
-      {
-        id: "alert3",
-        userId: "user456",
-        text: "SOS Alert on 2025-05-10 08:30 AM: Medical emergency",
-        pickedUp: false
-      }
-    ],
-    reportingIssues: [
-      { id: "issue2", text: "Reporting Issue on 2025-05-01: Traffic incident reported" }
-    ],
-    communityPosts: [
-      { id: "post2", text: "Community Post on 2025-05-02: Local community event announcement" }
-    ]
-  }
-];
+const API_BASE_URL =
+  "https://safeon-git-main-malakmekkawys-projects.vercel.app/user/admin/";
+
+// Replace with your provided token
+const token =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODM3OTIwOGI0NjU1NTkzZjViYTM3ZTkiLCJpYXQiOjE3NDg1NTg2MDIsImV4cCI6MTc0OTE2MzQwMn0.G7PcOJ2ZFI5Hih6Z69rHm-Gse3sx-5yM_4GqF-y0X68";
+
+// Fix default icon issues with Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
 
 const UsersManagementSection = ({
-  searchQuery,
-  selectedUserId, // New prop to load a specific user's details automatically.
-  onViewProfile, // Callback that handles switching to a trusted member profile.
+  selectedUserId,
+  onViewProfile,
   onSelectAlert,
   onSelectReportingIssue,
-  onSelectCommunityPost
+  onSelectCommunityPost,
 }) => {
   const [searchId, setSearchId] = useState("");
   const [userData, setUserData] = useState(null);
-  const [actionMessage, setActionMessage] = useState("");
-  // Store the original user details for later "Back" navigation.
   const [originalUser, setOriginalUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  // If a selectedUserId prop is provided, load that user automatically.
+  // When selectedUserId (from parent) changes, fetch that profile
   useEffect(() => {
-    if (selectedUserId) {
-      const foundUser = dummyUsers.find(
-        (user) => user.id.toLowerCase() === selectedUserId.toLowerCase()
-      );
-      if (foundUser) {
-        setUserData(foundUser);
-        setOriginalUser(foundUser);
-      }
-    }
-  }, [selectedUserId]);
-
-  // Search for a user manually via input.
-  const handleSearch = () => {
-    const foundUser = dummyUsers.find(
-      (user) => user.id.toLowerCase() === searchId.trim().toLowerCase()
-    );
-    if (foundUser) {
-      setUserData(foundUser);
-      setOriginalUser(foundUser);
-      setActionMessage("");
+    if (selectedUserId && selectedUserId.trim()) {
+      fetchUserData(selectedUserId);
     } else {
       setUserData(null);
-      setActionMessage("User not found.");
-      setOriginalUser(null);
     }
-  };
+    // Reset originalUser whenever a new top-level user is selected.
+    setOriginalUser(null);
+  }, [selectedUserId]);
 
-  // Dummy admin action handlers.
-  const handleBanUser = () => setActionMessage("User has been banned.");
-  const handleDeactivateUser = () => setActionMessage("User account has been deactivated.");
-  const handleSendMessage = () => setActionMessage("Message sent to the user.");
+  const fetchUserData = async (userId) => {
+    if (!userId.trim()) {
+      setErrorMessage("Enter a valid user ID.");
+      return;
+    }
+    setLoading(true);
+    setErrorMessage("");
 
-  // When clicking a trusted member card, look up that user from dummyUsers.
-  const handleTrustedMemberClick = (member) => {
-    if (!originalUser) setOriginalUser(userData);
-    const foundUser = dummyUsers.find(
-      (user) => user.username.toLowerCase() === member.name.toLowerCase()
-    );
-    if (foundUser) {
-      setUserData(foundUser);
-    } else {
-      setUserData({
-        id: member.id || "N/A",
-        username: member.name,
-        latestLocation: "Not Available",
-        phone: "Not Available",
-        email: "Not Available",
-        status: "Not Available",
-        profileImage: "https://via.placeholder.com/150",
-        trustedMembers: [],
-        sosAlerts: [],
-        reportingIssues: [],
-        communityPosts: []
+    const url = `${API_BASE_URL}${userId}`;
+    try {
+      const response = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
+      if (!response.ok) {
+        let errorDetails = "";
+        try {
+          const errorData = await response.json();
+          errorDetails = errorData.message || JSON.stringify(errorData);
+        } catch (parseError) {
+          console.error("Error parsing error response:", parseError);
+        }
+        throw new Error(`User not found or server error. ${errorDetails}`);
+      }
+      const data = await response.json();
+      setUserData(data);
+    } catch (error) {
+      setErrorMessage(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Allow going back to the original user's details.
-  const handleBackToOriginal = () => {
+  const handleSearch = () => {
+    fetchUserData(searchId);
+  };
+
+  // When a trusted contact is clicked, save the current user as original and load the new profile.
+  const handleTrustedMemberClick = (contact) => {
+    if (!originalUser) {
+      setOriginalUser(userData);
+    }
+    fetchUserData(contact.userId._id);
+  };
+
+  // Back arrow restores the original user data.
+  const handleBack = () => {
     if (originalUser) {
       setUserData(originalUser);
       setOriginalUser(null);
     }
   };
 
+  // Default profile picture
+  const defaultProfilePic = "https://via.placeholder.com/150";
+
   return (
     <div className="users-management">
+      {/* Original Search Bar at the Top */}
       <div className="search-bar">
         <input
           type="text"
@@ -157,134 +119,190 @@ const UsersManagementSection = ({
         </button>
       </div>
 
-      {userData ? (
-        <div className="user-details">
-          <div className="user-header">
-            <img
-              src={userData.profileImage}
-              alt={`${userData.username} avatar`}
-              className="user-avatar"
-            />
-            <div className="user-info">
-              <h3>{userData.username}</h3>
-              <p>
-                <strong>User ID:</strong> {userData.id}
-              </p>
-              <p>
-                <strong>Status:</strong>{" "}
-                {userData.status.charAt(0).toUpperCase() + userData.status.slice(1)}
-              </p>
+      {/* Back Arrow if we've navigated into a trusted contact */}
+      {originalUser && (
+        <div className="back-arrow" onClick={handleBack}>
+          ← Back
+        </div>
+      )}
+
+      {loading ? (
+        <p className="loading-message">Loading user profile...</p>
+      ) : errorMessage ? (
+        <p className="error-message">{errorMessage}</p>
+      ) : userData ? (
+        <div className="user-data-container">
+          {/* User Profile Section */}
+          <div className="user-profile">
+            <div className="user-header">
+              <img
+                src={
+                  userData.userInfo.profileImage
+                    ? userData.userInfo.profileImage
+                    : defaultProfilePic
+                }
+                alt={`${userData.userInfo.name} avatar`}
+                className="user-avatar"
+              />
+              <div className="user-info">
+                <h3>{userData.userInfo.name}</h3>
+                <p>
+                  <strong>User ID:</strong> {userData.userInfo.id}
+                </p>
+                <p>
+                  <strong>Email:</strong> {userData.userInfo.email}
+                </p>
+                <p>
+                  <strong>Phone:</strong> {userData.userInfo.phone_num}
+                </p>
+              </div>
+            </div>
+
+            {/* Trusted Contacts Section */}
+            <div className="trusted-contacts">
+              <h4>Trusted Contacts</h4>
+              <ul className="trusted-contacts-list">
+                {userData.userInfo.trustedContacts?.map((contact, idx) => (
+                  <li
+                    key={idx}
+                    className="clickable-item"
+                    onClick={() => handleTrustedMemberClick(contact)}
+                  >
+                    <img
+                      src={
+                        contact.userId.profileImage
+                          ? contact.userId.profileImage
+                          : defaultProfilePic
+                      }
+                      alt={`${contact.name} avatar`}
+                      className="contact-avatar"
+                    />
+                    <span>
+                      {contact.name} - {contact.phone_num}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 
-          <div className="user-contact">
-            <p>
-              <strong>Latest Location:</strong> {userData.latestLocation}
-            </p>
-            <p>
-              <strong>Phone:</strong> {userData.phone}
-            </p>
-            <p>
-              <strong>Email:</strong> {userData.email}
-            </p>
+          {/* SOS Alerts Section */}
+          <div
+            className="sos-alerts-section clickable-item"
+            onClick={() =>
+              userData.sosAlerts &&
+              userData.sosAlerts.length > 0 &&
+              onSelectAlert(userData.sosAlerts[0])
+            }
+          >
+            <h4>SOS Alerts</h4>
+            {userData.sosAlerts && userData.sosAlerts.length > 0 ? (
+              <ul className="sos-alerts-list">
+                {userData.sosAlerts.map((alert) => (
+                  <li
+                    key={alert._id}
+                    className="sos-alert-item clickable-item"
+                    onClick={() => onSelectAlert(alert)}
+                  >
+                    <p>
+                      <strong>Status:</strong> {alert.status}
+                    </p>
+                    <p>
+                      <strong>Location:</strong> {alert.location.address} (
+                      {alert.location.lat}, {alert.location.lng})
+                    </p>
+                    <p>
+                      <strong>Created:</strong>{" "}
+                      {new Date(alert.createdAt).toLocaleString()}
+                    </p>
+                    <div className="alert-map">
+                      <MapContainer
+                        center={[alert.location.lat, alert.location.lng]}
+                        zoom={13}
+                        scrollWheelZoom={false}
+                        style={{ height: "150px", width: "100%" }}
+                      >
+                        <TileLayer
+                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        <Marker
+                          position={[alert.location.lat, alert.location.lng]}
+                        >
+                          <Popup>Alert Location</Popup>
+                        </Marker>
+                      </MapContainer>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No SOS alerts available.</p>
+            )}
           </div>
 
-          {originalUser && (
-            <button onClick={handleBackToOriginal} className="back-btn">
-              Back
-            </button>
-          )}
-
-          <div className="trusted-members">
-            <h4>Trusted Members</h4>
-            <div className="trusted-members-grid">
-              {userData.trustedMembers.map((member, index) => (
-                <div
-                  key={index}
-                  className="trusted-member-card"
-                  onClick={() => handleTrustedMemberClick(member)}
-                >
-                  <img
-                    src="https://via.placeholder.com/80"
-                    alt={member.name}
-                    className="trusted-member-avatar"
-                  />
-                  <h4>{member.name}</h4>
-                  <p>{member.relationship}</p>
-                </div>
-              ))}
-            </div>
+          {/* Community Posts Section */}
+          <div className="community-posts-section">
+            <h4>Community Posts</h4>
+            {userData.communityPosts && userData.communityPosts.length > 0 ? (
+              <ul className="community-posts-list">
+                {userData.communityPosts.map((post) => (
+                  <li
+                    key={post._id}
+                    className="community-post-item clickable-item"
+                    onClick={() => onSelectCommunityPost(post)}
+                  >
+                    <p>
+                      <strong>Description:</strong> {post.description}
+                    </p>
+                    <p>
+                      <strong>Location:</strong> {post.location.address}
+                    </p>
+                    <p>
+                      <strong>Status:</strong> {post.status}
+                    </p>
+                    <p>
+                      <strong>Posted:</strong>{" "}
+                      {new Date(post.createdAt).toLocaleString()}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No community posts available.</p>
+            )}
           </div>
 
-          <div className="sos-alerts">
-            <h4>SOS Alerts History</h4>
-            <ul>
-              {userData.sosAlerts.map((alert, idx) => (
-                <li
-                  key={idx}
-                  className="clickable-item"
-                  onClick={() => onSelectAlert && onSelectAlert(alert)}
-                >
-                  {alert.text}
-                </li>
-              ))}
-            </ul>
+          {/* Emergency Reports Section */}
+          <div
+            className="emergency-reports-section clickable-item"
+            onClick={() =>
+              userData.emergencyReports &&
+              userData.emergencyReports.length > 0 &&
+              onSelectReportingIssue(userData.emergencyReports[0])
+            }
+          >
+            <h4>Emergency Reports</h4>
+            {userData.emergencyReports &&
+            userData.emergencyReports.length > 0 ? (
+              <ul className="emergency-reports-list">
+                {userData.emergencyReports.map((report) => (
+                  <li
+                    key={report._id}
+                    className="emergency-report-item clickable-item"
+                    onClick={() => onSelectReportingIssue(report)}
+                  >
+                    <p>{report.description}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No emergency reports available.</p>
+            )}
           </div>
-
-          <div className="reporting-issues">
-            <h4>Reporting Issues History</h4>
-            <ul>
-              {userData.reportingIssues.map((issue, idx) => (
-                <li
-                  key={idx}
-                  className="clickable-item"
-                  onClick={() =>
-                    onSelectReportingIssue && onSelectReportingIssue(issue)
-                  }
-                >
-                  {issue.text}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="community-posts">
-            <h4>Community Posts History</h4>
-            <ul>
-              {userData.communityPosts.map((post, idx) => (
-                <li
-                  key={idx}
-                  className="clickable-item"
-                  onClick={() =>
-                    onSelectCommunityPost && onSelectCommunityPost(post)
-                  }
-                >
-                  {post.text}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="admin-actions">
-            <button onClick={handleBanUser} className="action-btn ban-btn">
-              Ban User
-            </button>
-            <button onClick={handleDeactivateUser} className="action-btn deactivate-btn">
-              Deactivate Account
-            </button>
-            <button onClick={handleSendMessage} className="action-btn message-btn">
-              Send Message
-            </button>
-          </div>
-
-          {actionMessage && (
-            <div className="action-message">{actionMessage}</div>
-          )}
         </div>
       ) : (
-        actionMessage && (
-          <div className="error-message">{actionMessage}</div>
-        )
+        <p className="info-message">No user data to display.</p>
       )}
     </div>
   );

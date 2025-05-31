@@ -25,10 +25,9 @@ const Dashboard = ({ setIsLoggedIn }) => {
   // For user detail load from community posts (by userId).
   const [selectedUserId, setSelectedUserId] = useState(null);
 
-  // When a sidebar menu item is clicked, use this helper to clear selectedUserId if needed.
+  // When a sidebar menu item is clicked, clear selectedUserId if needed.
   const handleSectionChange = (sectionKey) => {
     if (sectionKey === "users") {
-      // Clear any previously selected user ID so that the search bar shows empty.
       setSelectedUserId(null);
     }
     setActiveSection(sectionKey);
@@ -40,20 +39,19 @@ const Dashboard = ({ setIsLoggedIn }) => {
     setActiveSection("alertdetail");
   };
 
-  // Called when a community report (or a reporting issue/community post in Users Management) is clicked.
+  // Called when a community report is clicked.
   const handleSelectReport = (report) => {
     setSelectedReport(report);
     setActiveSection("reportdetail");
   };
 
-  // Called when a trusted member is clicked from Users Management.
+  // Called when a trusted member is clicked.
   const handleViewTrustedProfile = (member) => {
     setSelectedTrustedMember(member);
     setActiveSection("userprofile");
   };
 
   // Called when a community post's user avatar is clicked.
-  // This should set a user ID so that UsersManagementSection auto-loads that user's details.
   const handleViewUser = (userId) => {
     setSelectedUserId(userId);
     setActiveSection("users");
@@ -89,7 +87,7 @@ const Dashboard = ({ setIsLoggedIn }) => {
       case "users":
         return (
           <UsersManagementSection
-            selectedUserId={selectedUserId} // will be null when opened from sidebar
+            selectedUserId={selectedUserId}
             searchQuery={searchQuery}
             onViewProfile={handleViewTrustedProfile}
             onSelectAlert={handleSelectAlert}
@@ -135,6 +133,8 @@ const Dashboard = ({ setIsLoggedIn }) => {
         onLogout={() => setIsLoggedIn(false)}
       />
       <div className={`main-content ${activeSection}-layout`}>
+        {/* Remove or comment out the header to remove search bar from every page */}
+        {/* 
         <header className="dashboard-header">
           <div className="header-left">
             <input
@@ -151,7 +151,8 @@ const Dashboard = ({ setIsLoggedIn }) => {
               className="profile-pic"
             />
           </div>
-        </header>
+        </header> 
+        */}
         <div className="content-area">{renderSection()}</div>
       </div>
     </div>
