@@ -1,3 +1,4 @@
+// src/components/UsersManagementSection.jsx
 import React, { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -8,7 +9,7 @@ const API_BASE_URL =
 
 // Replace with your provided token
 const token =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODM3OTIwOGI0NjU1NTkzZjViYTM3ZTkiLCJpYXQiOjE3NDg1NTg2MDIsImV4cCI6MTc0OTE2MzQwMn0.G7PcOJ2ZFI5Hih6Z69rHm-Gse3sx-5yM_4GqF-y0X68";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MzhlYWM3NmY2MmQ0ZmYyYjAwNTdmNSIsImlhdCI6MTc0ODcyODYyOCwiZXhwIjoxNzQ5MzMzNDI4fQ.L5GMymp9iKQxnjUYicFoo6HXN2JDGnqh-a6TMrfxAcQ";
 
 // Fix default icon issues with Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -72,6 +73,7 @@ const UsersManagementSection = ({
         throw new Error(`User not found or server error. ${errorDetails}`);
       }
       const data = await response.json();
+      console.log("Fetched user data:", data);
       setUserData(data);
     } catch (error) {
       setErrorMessage(error.message);
@@ -89,7 +91,9 @@ const UsersManagementSection = ({
     if (!originalUser) {
       setOriginalUser(userData);
     }
-    fetchUserData(contact.userId._id);
+    if (contact && contact.userId && contact.userId._id) {
+      fetchUserData(contact.userId._id);
+    }
   };
 
   // Back arrow restores the original user data.
@@ -102,6 +106,9 @@ const UsersManagementSection = ({
 
   // Default profile picture
   const defaultProfilePic = "https://via.placeholder.com/150";
+
+  // If the API response nests user info under userData.userInfo, use that; otherwise, assume userData is the user object.
+  const userInfo = userData && userData.userInfo ? userData.userInfo : userData;
 
   return (
     <div className="users-management">
@@ -137,23 +144,30 @@ const UsersManagementSection = ({
             <div className="user-header">
               <img
                 src={
-                  userData.userInfo.profileImage
-                    ? userData.userInfo.profileImage
+                  userInfo && userInfo.profileImage
+                    ? userInfo.profileImage
                     : defaultProfilePic
                 }
-                alt={`${userData.userInfo.name} avatar`}
+                alt={
+                  userInfo && userInfo.name
+                    ? `${userInfo.name} avatar`
+                    : "User Avatar"
+                }
                 className="user-avatar"
               />
               <div className="user-info">
-                <h3>{userData.userInfo.name}</h3>
+                <h3>{userInfo && userInfo.name ? userInfo.name : "No Name Provided"}</h3>
                 <p>
-                  <strong>User ID:</strong> {userData.userInfo.id}
+                  <strong>User ID:</strong>{" "}
+                  {userInfo && userInfo.id ? userInfo.id : "N/A"}
                 </p>
                 <p>
-                  <strong>Email:</strong> {userData.userInfo.email}
+                  <strong>Email:</strong>{" "}
+                  {userInfo && userInfo.email ? userInfo.email : "N/A"}
                 </p>
                 <p>
-                  <strong>Phone:</strong> {userData.userInfo.phone_num}
+                  <strong>Phone:</strong>{" "}
+                  {userInfo && userInfo.phone_num ? userInfo.phone_num : "N/A"}
                 </p>
               </div>
             </div>
@@ -161,28 +175,36 @@ const UsersManagementSection = ({
             {/* Trusted Contacts Section */}
             <div className="trusted-contacts">
               <h4>Trusted Contacts</h4>
-              <ul className="trusted-contacts-list">
-                {userData.userInfo.trustedContacts?.map((contact, idx) => (
-                  <li
-                    key={idx}
-                    className="clickable-item"
-                    onClick={() => handleTrustedMemberClick(contact)}
-                  >
-                    <img
-                      src={
-                        contact.userId.profileImage
-                          ? contact.userId.profileImage
-                          : defaultProfilePic
-                      }
-                      alt={`${contact.name} avatar`}
-                      className="contact-avatar"
-                    />
-                    <span>
-                      {contact.name} - {contact.phone_num}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              {userInfo && userInfo.trustedContacts && userInfo.trustedContacts.length > 0 ? (
+                <ul className="trusted-contacts-list">
+                  {userInfo.trustedContacts.map((contact, idx) => {
+                    // If contact or its userId is null, skip rendering this contact to avoid errors.
+                    if (!contact || !contact.userId) return null;
+                    return (
+                      <li
+                        key={idx}
+                        className="clickable-item"
+                        onClick={() => handleTrustedMemberClick(contact)}
+                      >
+                        <img
+                          src={
+                            contact.userId?.profileImage
+                              ? contact.userId.profileImage
+                              : defaultProfilePic
+                          }
+                          alt={`${contact.name} avatar`}
+                          className="contact-avatar"
+                        />
+                        <span>
+                          {contact.name} - {contact.phone_num}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p>No trusted contacts available.</p>
+              )}
             </div>
           </div>
 

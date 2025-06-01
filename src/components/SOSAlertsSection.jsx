@@ -1,99 +1,110 @@
+// src/components/SOSAlertsSection.jsx
 import React, { useEffect, useState } from "react";
+import { getAllAlerts } from "../api/adminAPI";
+import "../styles.css";
 
-const SOSAlertsSection = ({ activeSubTab, searchQuery, onSelectAlert }) => {
-  const [reports, setReports] = useState([]);
-  const [view, setView] = useState("pending");
+const SOSAlertsSection = function ({ searchQuery, onSelectAlert }) {
+  const [alerts, setAlerts] = useState([]);
+  const [view, setView] = useState("in_progress");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    // Dummy data for SOS alerts that can be replaced with real API data.
-    const dummyReports = [
-      {
-        id: 1,
-        userId: "user123",
-        location: "Cairo, Egypt",
-        timestamp: "5 minutes ago",
-        pickedUp: false,
-        status: "pending",
-        title: "SOS Alert from user123",
-        description: "User needs immediate assistance at Cairo."
-      },
-      {
-        id: 2,
-        userId: "user456",
-        location: "Giza, Egypt",
-        timestamp: "10 minutes ago",
-        pickedUp: true,
-        status: "approved",
-        title: "SOS Alert from user456",
-        description: "User reported an incident in Giza."
-      },
-      {
-        id: 3,
-        userId: "user789",
-        location: "Alexandria, Egypt",
-        timestamp: "15 minutes ago",
-        pickedUp: false,
-        status: "pending",
-        title: "SOS Alert from user789",
-        description: "User requires urgent help in Alexandria."
+  useEffect(function () {
+    async function fetchAlerts() {
+      setLoading(true);
+      try {
+        const data = await getAllAlerts();
+        setAlerts(data);
+      } catch (err) {
+        console.error("Error fetching SOS alerts:", err);
+        setError("Error fetching SOS alerts");
+      } finally {
+        setLoading(false);
       }
-    ];
-    setReports(dummyReports);
+    }
+    fetchAlerts();
   }, []);
 
-  // Filter based on view (pending/approved) and the search query.
-  const filteredReports = reports
-    .filter((report) => report.status === view)
-    .filter((report) =>
-      report.title.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filter alerts by selected view ("in_progress" or "resolved")
+  const filteredAlerts = alerts.filter(function (alert) {
+    return (
+      alert.status && alert.status.toLowerCase() === view.toLowerCase()
     );
+  });
 
   return (
-    <div className="sos-alerts-section card" style={{ padding: "20px" }}>
-      <h2>SOS Alerts - {view.charAt(0).toUpperCase() + view.slice(1)}</h2>
+    <div className="sos-alerts-section card">
+      <h2>
+        <i className="fas fa-bell icon"></i>{" "}
+        SOS Alerts - {view.charAt(0).toUpperCase() + view.slice(1)}
+      </h2>
 
-      {/* Toggle between pending and approved alerts */}
-      <div className="view-buttons" style={{ marginBottom: "10px" }}>
+      <div className="view-buttons">
         <button
-          className={view === "pending" ? "active" : ""}
-          onClick={() => setView("pending")}
-          style={{ marginRight: "10px" }}
+          className={"tab-button " + (view === "in_progress" ? "active" : "")}
+          onClick={function () {
+            setView("in_progress");
+          }}
         >
-          View Pending Alerts
+          View In Progress Alerts
         </button>
         <button
-          className={view === "approved" ? "active" : ""}
-          onClick={() => setView("approved")}
+          className={"tab-button " + (view === "resolved" ? "active" : "")}
+          onClick={function () {
+            setView("resolved");
+          }}
         >
-          View Approved Alerts
+          View Resolved Alerts
         </button>
       </div>
 
-      {/* List of alerts */}
-      <div className="reports-list">
-        {filteredReports.length === 0 && <p>No reports found.</p>}
-        {filteredReports.map((report) => (
-          <div
-            key={report.id}
-            className="report-item"
-            onClick={() => onSelectAlert(report)}
-            style={{
-              cursor: "pointer",
-              marginBottom: "10px",
-              padding: "10px",
-              border: "1px solid #ccc"
-            }}
-          >
-            <p>
-              <strong>{report.title}</strong>
-            </p>
-            <p>User ID: {report.userId}</p>
-            <p>Location: {report.location}</p>
-            <p>Sent: {report.timestamp}</p>
-            <p>Picked Up: {report.pickedUp ? "Yes" : "No"}</p>
-          </div>
-        ))}
-      </div>
+      {loading ? (
+        <p>Loading SOS alerts...</p>
+      ) : error ? (
+        <p className="error-text">{error}</p>
+      ) : filteredAlerts.length === 0 ? (
+        <p>No alerts found.</p>
+      ) : (
+        <div className="alerts-list">
+          {filteredAlerts.map(function (alert) {
+            return (
+              <div
+                key={alert._id}
+                className="alert-item"
+                onClick={function () {
+                  onSelectAlert(alert);
+                }}
+                style={{
+                  cursor: "pointer",
+                  marginBottom: "10px",
+                  padding: "10px",
+                  border: "1px solid #ccc",
+                  borderRadius: "5px",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  transition: "background-color 0.3s ease"
+                }}
+                onMouseEnter={function (e) {
+                  e.currentTarget.style.backgroundColor = "#f9f9f9";
+                }}
+                onMouseLeave={function (e) {
+                  e.currentTarget.style.backgroundColor = "#fff";
+                }}
+              >
+                <p>
+                  <strong>Location:</strong> {alert.location.address || "Unknown Location"}
+                </p>
+                <p>
+                  <strong>Status:</strong> {alert.status}
+                </p>
+                <p>
+                  <strong>Response Time:</strong>{" "}
+                  {alert.responseTime ? alert.responseTime + " seconds" : "Not recorded"}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

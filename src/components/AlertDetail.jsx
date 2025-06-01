@@ -1,9 +1,10 @@
+// src/components/AlertDetail.jsx
 import React, { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-// Fix default icon issues with Leaflet (needed for many bundlers)
+// Fix Leaflet icon issues
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -14,76 +15,62 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-const AlertDetail = ({ alertData, onBack }) => {
-  const [data, setData] = useState(null);
+const AlertDetail = function ({ alertData, onBack }) {
+  const [alert, setAlert] = useState(null);
 
-  useEffect(() => {
-    // When alertData is provided, add extra properties.
+  useEffect(function () {
     if (alertData) {
-      const dummyAlertData = {
-        ...alertData,
-        username: alertData.userId, // mapping userId to username
-        liveVideoStream: "Live Video Streaming...",
-        saved: true,
-        pickedUp: alertData.pickedUp,
-        trustedMembersStatus: [
-          { member: "trusted1", status: "responding" },
-          { member: "trusted2", status: "responded" },
-        ],
-        recordedVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
-        // Add dummy coordinates if not provided – using Cairo coordinates as an example.
-        coordinates: alertData.coordinates || { lat: 30.0444, lng: 31.2357 },
-      };
-      setData(dummyAlertData);
+      setAlert(alertData);
     }
   }, [alertData]);
 
-  if (!data) {
-    return <div>Loading alert details...</div>;
+  if (!alert) {
+    return <div className="loading-message">Loading alert details...</div>;
   }
 
-  return (
-    <div style={{ padding: "20px" }}>
-      <button onClick={onBack} style={{ marginBottom: "20px" }}>
-        &larr; Back to Alerts
-      </button>
-      <h2>Alert Details for Report ID: {data.id}</h2>
+  // Extract latitude and longitude from the alert's location object
+  const lat = alert.location && alert.location.lat ? alert.location.lat : null;
+  const lng = alert.location && alert.location.lng ? alert.location.lng : null;
 
-      {/* Live Video Section */}
-      <div style={{ marginBottom: "20px" }}>
-        <h3>Live Video</h3>
-        <div
-          style={{
-            width: "640px",
-            height: "360px",
-            backgroundColor: "#000",
-            color: "white",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {data.liveVideoStream}
-        </div>
+  return (
+    <div className="alert-detail card">
+      <button
+        onClick={function () {
+          onBack("sos");
+        }}
+        className="back-btn"
+      >
+        &larr; Back to SOS Alerts
+      </button>
+      <h2 className="alert-title">
+        <i className="fas fa-bell icon"></i> Alert Details
+      </h2>
+
+      {/* Alert Information */}
+      <div className="alert-section alert-info">
+        <h3>Alert Information</h3>
+        <p>
+          <strong>Status:</strong> {alert.status}
+        </p>
+        <p>
+          <strong>Location:</strong> {alert.location.address || "Unknown Location"}
+        </p>
+        <p>
+          <strong>Date:</strong> {new Date(alert.createdAt).toLocaleString()}
+        </p>
       </div>
 
       {/* Live Location Map */}
-      <div style={{ marginBottom: "20px" }}>
+      <div className="alert-section alert-map">
         <h3>Live Location</h3>
-        {data.coordinates ? (
-          <MapContainer
-            center={[data.coordinates.lat, data.coordinates.lng]}
-            zoom={13}
-            style={{ height: "360px", width: "640px" }}
-          >
+        {lat && lng ? (
+          <MapContainer center={[lat, lng]} zoom={13} className="map-container">
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">
-                OpenStreetMap
-              </a> contributors'
+              attribution='&copy; OpenStreetMap contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <Marker position={[data.coordinates.lat, data.coordinates.lng]}>
-              <Popup>{data.location}</Popup>
+            <Marker position={[lat, lng]}>
+              <Popup>{alert.location.address}</Popup>
             </Marker>
           </MapContainer>
         ) : (
@@ -91,51 +78,39 @@ const AlertDetail = ({ alertData, onBack }) => {
         )}
       </div>
 
-      {/* User Details */}
-      <div style={{ marginBottom: "20px" }}>
-        <h3>User Details</h3>
-        <p>
-          <strong>Username:</strong> {data.username}
-        </p>
-        <p>
-          <strong>Location:</strong> {data.location}
-        </p>
-      </div>
-
-      {/* Trusted Members Status */}
-      <div style={{ marginBottom: "20px" }}>
-        <h3>Trusted Members Response</h3>
-        <ul>
-          {data.trustedMembersStatus.map((memberStatus, index) => (
-            <li key={index}>
-              {memberStatus.member}: {memberStatus.status}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Alert Status */}
-      <div style={{ marginBottom: "20px" }}>
-        <h3>Alert Status</h3>
-        <p>
-          <strong>Alert Saved:</strong> {data.saved ? "Yes" : "No"}
-        </p>
-        <p>
-          <strong>Call Picked Up:</strong> {data.pickedUp ? "Yes" : "No"}
-        </p>
-      </div>
-
-      {/* Recorded Video Playback */}
-      <div>
-        <h3>Recorded Video</h3>
-        {data.recordedVideo ? (
+      {/* Media Section */}
+      <div className="alert-section alert-media">
+        <h3>Alert Media</h3>
+        {alert.videoStreamUrl ? (
           <video width="640" height="360" controls>
-            <source src={data.recordedVideo} type="video/mp4" />
+            <source src={alert.videoStreamUrl} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
         ) : (
-          <p>No recorded video available.</p>
+          <p>No live stream available.</p>
         )}
+      </div>
+
+      {/* Trusted Contacts */}
+      <div className="alert-section alert-info">
+        <h3>Trusted Contacts</h3>
+        {alert.trustedContacts && alert.trustedContacts.length > 0 ? (
+          <ul>
+            {alert.trustedContacts.map(function (contact, idx) {
+              return <li key={idx}>{contact}</li>;
+            })}
+          </ul>
+        ) : (
+          <p>No trusted contacts available.</p>
+        )}
+      </div>
+
+      {/* Response Time */}
+      <div className="alert-section alert-info">
+        <h3>Response Time</h3>
+        <p>
+          {alert.responseTime ? alert.responseTime + " seconds" : "Not recorded"}
+        </p>
       </div>
     </div>
   );
