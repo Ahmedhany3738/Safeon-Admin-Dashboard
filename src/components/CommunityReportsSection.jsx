@@ -1,99 +1,58 @@
-// In your CommunityReportsSection.jsx file
-import React, { useState } from "react";
+// src/components/CommunityReportsSection.jsx
+import React, { useState, useEffect } from "react";
+import { getReports } from "../api/adminAPI";
+import "../styles.css";
 
-const tabs = ["Pending", "Approved", "Rejected"];
-
-const sampleReports = {
-  Pending: [
-    {
-      id: "1",
-      username: "userA",
-      category: "Fire Accident",
-      location: "Cairo, Egypt",
-      date: "2025-05-17 10:00 AM",
-      description:
-        "There was a fire accident at a residential area. Flames were visible and first responders are on site.",
-      media: "https://via.placeholder.com/150",
-      mediaType: "image",
-      coordinates: { lat: 30.0444, lng: 31.2357 }, // Cairo coordinates
-      userDetails: {
-        fullName: "Ahmed Ali",
-        email: "ahmed@example.com",
-        phone: "+201234567890"
-      }
-    },
-    {
-      id: "2",
-      username: "userB",
-      category: "Kidnapping",
-      location: "Giza, Egypt",
-      date: "2025-05-17 10:30 AM",
-      description:
-        "A kidnapping incident was reported near the market. The suspect was observed leaving in a dark vehicle.",
-      media: "https://via.placeholder.com/150",
-      mediaType: "image",
-      coordinates: { lat: 30.0131, lng: 31.2089 }, // Giza coordinates
-      userDetails: {
-        fullName: "Sara Mahmoud",
-        email: "sara@example.com",
-        phone: "+201098765432"
-      }
-    }
-  ],
-  Approved: [
-    {
-      id: "3",
-      username: "userC",
-      category: "Robbery",
-      location: "Alexandria, Egypt",
-      date: "2025-05-16 09:00 AM",
-      description:
-        "A robbery occurred at a local shop. The suspect was apprehended after a chase and security footage is available.",
-      media: "https://via.placeholder.com/150",
-      mediaType: "image",
-      coordinates: { lat: 31.2001, lng: 29.9187 }, // Alexandria coordinates
-      userDetails: {
-        fullName: "Hassan Kamel",
-        email: "hassan@example.com",
-        phone: "+201112223334"
-      }
-    }
-  ],
-  Rejected: [
-    {
-      id: "4",
-      username: "userD",
-      category: "Suspicious Activity",
-      location: "Luxor, Egypt",
-      date: "2025-05-15 08:00 AM",
-      description:
-        "Suspicious activity was reported by multiple witnesses and later determined to be a misunderstanding.",
-      media: "https://via.placeholder.com/150",
-      mediaType: "image",
-      coordinates: { lat: 25.6872, lng: 32.6396 }, // Luxor coordinates
-      userDetails: {
-        fullName: "Mona Elzahraa",
-        email: "mona@example.com",
-        phone: "+201556677889"
-      }
-    }
-  ]
-};
-
+const tabs = ["Pending", "Handled"];
 
 const CommunityReportsSection = ({ activeSubTab, searchQuery, onSelectReport }) => {
   const [activeTab, setActiveTab] = useState("Pending");
-  const reports = sampleReports[activeTab] || [];
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
+  // Fetch live reports data from your API
+  useEffect(() => {
+    const fetchReports = async () => {
+      setLoading(true);
+      try {
+        const data = await getReports();
+        // Expecting getReports() to return an array of reports
+        setReports(data);
+      } catch (err) {
+        console.error("Error fetching reports:", err);
+        setError("Error fetching reports");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReports();
+  }, []);
+
+  // Filter reports: if tab is "Pending", only reports with status 'pending'
+  // Otherwise, everything not pending is considered Handled
+  const filteredReports = reports.filter(report => {
+    if (activeTab === "Pending") {
+      return report.status && report.status.toLowerCase() === "pending";
+    } else if (activeTab === "Handled") {
+      return report.status && report.status.toLowerCase() !== "pending";
+    }
+    return true;
+  });
+
+  // Helper to truncate text
   const truncateText = (text, maxLength = 60) => {
+    if (!text) return "";
     return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
   };
 
   return (
     <div className="community-reports-section card" style={{ padding: "20px" }}>
-      <h2>Community Reports</h2>
+      <h2>
+        <i className="fas fa-exclamation-triangle icon"></i> Community Reports
+      </h2>
       <div className="tabs" style={{ marginBottom: "10px" }}>
-        {tabs.map((tab) => (
+        {tabs.map(tab => (
           <button
             key={tab}
             className={`tab-button ${activeTab === tab ? "active" : ""}`}
@@ -105,13 +64,17 @@ const CommunityReportsSection = ({ activeSubTab, searchQuery, onSelectReport }) 
         ))}
       </div>
 
-      <div className="reports-list">
-        {reports.length === 0 ? (
-          <p>No reports found.</p>
-        ) : (
-          reports.map((report) => (
+      {loading ? (
+        <p>Loading reports...</p>
+      ) : error ? (
+        <p className="error-text">{error}</p>
+      ) : filteredReports.length === 0 ? (
+        <p>No reports found.</p>
+      ) : (
+        <div className="reports-list">
+          {filteredReports.map(report => (
             <div
-              key={report.id}
+              key={report._id}
               className="report-item"
               style={{
                 border: "1px solid #ccc",
@@ -123,21 +86,45 @@ const CommunityReportsSection = ({ activeSubTab, searchQuery, onSelectReport }) 
               onClick={() => onSelectReport(report)}
             >
               <div className="media-thumbnail" style={{ marginRight: "10px" }}>
-                <img src={report.media} alt={report.category} width="100" height="60" />
+                {report.photos && report.photos.length > 0 ? (
+                  <img
+                    src={report.photos[0]}
+                    alt={report.emergencyType}
+                    width="100"
+                    height="60"
+                  />
+                ) : (
+                  <img
+                    src="https://via.placeholder.com/150"
+                    alt={report.emergencyType}
+                    width="100"
+                    height="60"
+                  />
+                )}
               </div>
               <div className="report-info">
                 <p>
-                  <strong>{report.username}</strong>
+                  <strong>
+                    {report.userId && report.userId.name ? report.userId.name : "Unknown User"}
+                  </strong>
                 </p>
-                <p>Category: {report.category}</p>
-                <p>Location: {report.location}</p>
-                <p>Date: {report.date}</p>
+                <p>Category: {report.emergencyType}</p>
+                <p>
+                  Location:{" "}
+                  {report.location && report.location.address ? report.location.address : "Unknown Location"}
+                </p>
+                <p>
+                  Date:{" "}
+                  {report.createdAt
+                    ? new Date(report.createdAt).toLocaleDateString()
+                    : ""}
+                </p>
                 <p>Description: {truncateText(report.description)}</p>
               </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
